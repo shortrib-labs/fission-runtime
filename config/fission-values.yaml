@@ -1,0 +1,18 @@
+#@ looad("@ytt.data", "data")
+---
+## Fission chart configuration
+##
+
+## functionNamespace represents the namespace in which Fission Function resources will be created.
+## This is different from the release namespace.
+##
+functionNamespace: functions
+#
+## Message queue trigger config
+## NATS Streaming, enabled by default
+##
+nats:
+  ## whether or not to use NATS
+  ##
+  enabled: true
+
