@@ -16,3 +16,7 @@ nats:
   ##
   enabled: true
 
+## Analytics let us count how many people installed fission. Set to
+## false to disable analytics.
+##
+  analytics: false
