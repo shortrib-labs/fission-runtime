@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: contour
   rules:
-    - host: functions.shortrib.app
+    - host: fission.shortrib.app
     http:
       paths:
       - backend:
@@ -22,5 +22,5 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - router.shortrib.dev
+    - fission.shortrib.dev
     secretName: router-cert
