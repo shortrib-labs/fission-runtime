@@ -1,4 +1,4 @@
-#@ looad("@ytt.data", "data")
+#@ load("@ytt.data", "data")
 ---
 ## Fission chart configuration
 ##
