@@ -3,6 +3,11 @@
 ## Fission chart configuration
 ##
 
+## routerServiceType to consider while creating Fission Router service.
+## For minikube, set this to NodePort, elsewhere use LoadBalancer or ClusterIP.
+##
+routerServiceType: LoadBalancer
+
 ## functionNamespace represents the namespace in which Fission Function resources will be created.
 ## This is different from the release namespace.
 ##
