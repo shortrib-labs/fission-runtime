@@ -1,0 +1,109 @@
+---
+resources:
+- name: source
+  type: git
+  icon: github
+  source:
+    uri: ((source.repository))
+    branch: ((source.branch))
+    paths:
+    - "config/**"
+
+jobs:
+- name: prepare-cluster
+  plan:
+  - get: source
+    trigger: true
+  - task: generate-template
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: { repository: registry.shortrib.dev/toolkit/toolkit }
+      inputs:
+      - name: source
+      params:
+        CLUSTER_NAME: ((kubernetes.cluster))
+        FISSION_NAMESPACE: ((fission.namespace))
+        KUBECONFIG_JSON: ((kubeconfig))
+      run:
+        path: bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          echo "${KUBECONFIG_JSON}" > kubeconfig
+          export KUBECONFIG=$(pwd)/kubeconfig
+          kubectl config use-context platform-team@$CLUSTER_NAME
+          kubectl create namespace ${FISSION_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create -k "github.com/fission/fission/crds/v1?ref=v1.15.0" -o yaml || \
+            kubectl replace -k "github.com/fission/fission/crds/v1?ref=v1.15.0" -o yaml 
+
+- name: deploy-chart
+  plan:
+  - get: source
+    trigger: true
+    passed:
+    - prepare-cluster
+  - task: generate-template
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: { repository: registry.shortrib.dev/toolkit/toolkit }
+      inputs:
+      - name: source
+      outputs:
+      - name: manifest
+      params:
+        CLUSTER_NAME: ((kubernetes.cluster))
+        FISSION_NAMESPACE: ((fission.namespace))
+      run:
+        path: bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          mkdir -p manifest/fission
+
+          ytt --ignore-unknown-comments -f source/config/fission-values.yaml \
+            > manifest/fission-values.yaml
+          curl https://letsencrypt.org/certs/lets-encrypt-r3-cross-signed.pem > letsencrypt.pem
+
+          helm repo add fission-charts https://fission.github.io/fission-charts/
+          helm repo update
+          helm template fission fission-charts/fission-all -f manifest/fission-values.yaml --namespace $FISSION_NAMESPACE \
+              > manifest/helm-manifest.yaml
+
+  - task: deploy
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: { repository: registry.shortrib.dev/toolkit/toolkit }
+      inputs:
+      - name: manifest
+      params:
+        CLUSTER_NAME: ((kubernetes.cluster))
+        FISSION_NAMESPACE: ((fission.namespace))
+        KUBECONFIG_JSON: ((kubeconfig))
+      run:
+        path: bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          echo "${KUBECONFIG_JSON}" > kubeconfig
+          export KUBECONFIG=$(pwd)/kubeconfig
+          kubectl config use-context platform-team@$CLUSTER_NAME
+
+          kapp deploy -a fission  \
+            -f manifest/helm-manifest.yaml \
+            -n tanzu-kapp --into-ns ${FISSION_NAMESPACE} \
+            -y
+
+resource_types:
+- name: helm-chart
+  type: registry-image
+  source:
+    repository: jghiloni/helm-chart-resource
