@@ -1,0 +1,27 @@
+#@ load("@ytt:data", "data")
+---
+## Fission chart configuration
+##
+
+## routerServiceType to consider while creating Fission Router service.
+## For minikube, set this to NodePort, elsewhere use LoadBalancer or ClusterIP.
+##
+routerServiceType: LoadBalancer
+
+## functionNamespace represents the namespace in which Fission Function resources will be created.
+## This is different from the release namespace.
+##
+functionNamespace: functions
+#
+## Message queue trigger config
+## NATS Streaming, enabled by default
+##
+nats:
+  ## whether or not to use NATS
+  ##
+  enabled: true
+
+## Analytics let us count how many people installed fission. Set to
+## false to disable analytics.
+##
+analytics: false
