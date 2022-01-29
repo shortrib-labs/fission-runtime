@@ -1,9 +1,0 @@
-source:
-  repository: https://github.com/shortrib-net/fission-runtime
-  branch: feature-deploy-fission
-
-fission:
-  namespace: fission
-
-kubernetes:
-  cluster: poblano
