@@ -14,7 +14,7 @@ jobs:
   plan:
   - get: source
     trigger: true
-  - task: generate-template
+  - task: create-namespace
     config:
       platform: linux
       image_resource:
@@ -36,6 +36,27 @@ jobs:
           export KUBECONFIG=$(pwd)/kubeconfig
           kubectl config use-context platform-team@$CLUSTER_NAME
           kubectl create namespace ${FISSION_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+  - task: create-or-replace-crds
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source: { repository: registry.shortrib.dev/toolkit/toolkit }
+      inputs:
+      - name: source
+      params:
+        CLUSTER_NAME: ((kubernetes.cluster))
+        FISSION_NAMESPACE: ((fission.namespace))
+        KUBECONFIG_JSON: ((kubeconfig))
+      run:
+        path: bash
+        args:
+        - "-e"
+        - "-c"
+        - |
+          echo "${KUBECONFIG_JSON}" > kubeconfig
+          export KUBECONFIG=$(pwd)/kubeconfig
+          kubectl config use-context platform-team@$CLUSTER_NAME
           kubectl create -k "github.com/fission/fission/crds/v1?ref=v1.15.0" -o yaml || \
             kubectl replace -k "github.com/fission/fission/crds/v1?ref=v1.15.0" -o yaml 
 

@@ -1,0 +1,5 @@
+#@ load("@ytt:data", "data")
+---
+source: #@ data.values.source
+fission: #@ data.values.fission
+kubernetes: #@ data.values.kubernetes

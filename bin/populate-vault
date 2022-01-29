@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+
+put-secret --team platform-team --pipeline "$(basename ${PROJECT_DIR})" \
+  --var kubeconfig value="$(cat ${SECRETS_DIR}/kubeconfig})" 
